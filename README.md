@@ -73,4 +73,4 @@ Before starting, I would have asked whether this tool is assumed to be trusted a
 
 ## Screen recording
 
-The three-minute walkthrough link will be added after the final local review. The recording will show save, restart persistence, favourite filtering, deletion, one bad-URL path, and the decision to use a server-side fetcher with JSON persistence for the exercise.
+The three-minute walkthrough is delivered separately with the submission. It shows save, restart persistence, favourite filtering, deletion, one bad-URL path, and the decision to use a server-side fetcher with JSON persistence for the exercise.
