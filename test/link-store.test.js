@@ -34,11 +34,29 @@ test('persists links across store reloads', async () => {
       title: 'Example Domain',
     });
 
-    assert.equal(Object.hasOwn(created, 'favourite'), false);
+    assert.equal(created.favourite, false);
 
     const secondStore = await createLinkStore(filePath);
 
     assert.deepEqual(await secondStore.list(), [created]);
+  });
+});
+
+test('persists favourite changes across store reloads', async () => {
+  await withStore(async ({ filePath }) => {
+    const firstStore = await createLinkStore(filePath);
+    const created = await firstStore.add({
+      url: 'https://example.com/',
+      title: 'Example Domain',
+    });
+
+    const updated = await firstStore.setFavourite(created.id, true);
+
+    assert.equal(updated.favourite, true);
+    assert.equal(await firstStore.setFavourite('missing-id', true), null);
+
+    const secondStore = await createLinkStore(filePath);
+    assert.deepEqual(await secondStore.list(), [updated]);
   });
 });
 

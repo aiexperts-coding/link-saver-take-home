@@ -18,6 +18,11 @@ export async function createLinkStore(filePath) {
     if (!Array.isArray(links)) {
       throw new SyntaxError('The root value must be an array.');
     }
+
+    links = links.map((link) => ({
+      ...link,
+      favourite: link.favourite === true,
+    }));
   } catch (error) {
     if (error.code === 'ENOENT') {
       links = [];
@@ -50,12 +55,27 @@ export async function createLinkStore(filePath) {
         url,
         title,
         savedAt: new Date().toISOString(),
+        favourite: false,
       };
 
       links = [link, ...links];
       await persist();
 
       return cloneLink(link);
+    },
+
+    async setFavourite(id, favourite) {
+      const index = links.findIndex((link) => link.id === id);
+
+      if (index === -1) {
+        return null;
+      }
+
+      const updated = { ...links[index], favourite };
+      links = links.with(index, updated);
+      await persist();
+
+      return cloneLink(updated);
     },
 
     async remove(id) {

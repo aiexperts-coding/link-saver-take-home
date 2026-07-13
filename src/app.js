@@ -40,6 +40,34 @@ export function createApp({ store, fetchTitle, publicDirectory } = {}) {
     }
   });
 
+  app.patch('/api/links/:id/favourite', async (request, response, next) => {
+    try {
+      if (typeof request.body?.favourite !== 'boolean') {
+        return response.status(400).json({
+          error: {
+            code: 'INVALID_FAVOURITE',
+            message: 'Favourite must be true or false.',
+          },
+        });
+      }
+
+      const link = await store.setFavourite(
+        request.params.id,
+        request.body.favourite,
+      );
+
+      if (!link) {
+        return response.status(404).json({
+          error: { code: 'LINK_NOT_FOUND', message: 'Link not found.' },
+        });
+      }
+
+      return response.json(link);
+    } catch (error) {
+      return next(error);
+    }
+  });
+
   if (publicDirectory) {
     app.use(express.static(publicDirectory));
   }

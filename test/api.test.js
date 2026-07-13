@@ -32,7 +32,7 @@ test('creates, lists, and deletes a persisted link', async () => {
       .expect(201);
 
     assert.equal(created.body.title, 'Example Domain');
-    assert.equal(Object.hasOwn(created.body, 'favourite'), false);
+    assert.equal(created.body.favourite, false);
 
     const listed = await request(app).get('/api/links').expect(200);
     assert.deepEqual(listed.body, [created.body]);
@@ -41,6 +41,42 @@ test('creates, lists, and deletes a persisted link', async () => {
 
     const empty = await request(app).get('/api/links').expect(200);
     assert.deepEqual(empty.body, []);
+  });
+});
+
+test('updates a favourite and validates patch requests', async () => {
+  await withApp(async ({ app }) => {
+    const created = await request(app)
+      .post('/api/links')
+      .send({ url: 'https://example.com' })
+      .expect(201);
+
+    const updated = await request(app)
+      .patch(`/api/links/${created.body.id}/favourite`)
+      .send({ favourite: true })
+      .expect(200);
+
+    assert.equal(updated.body.favourite, true);
+
+    const listed = await request(app).get('/api/links').expect(200);
+    assert.deepEqual(listed.body, [updated.body]);
+
+    const invalid = await request(app)
+      .patch(`/api/links/${created.body.id}/favourite`)
+      .send({ favourite: 'yes' })
+      .expect(400);
+
+    assert.deepEqual(invalid.body, {
+      error: {
+        code: 'INVALID_FAVOURITE',
+        message: 'Favourite must be true or false.',
+      },
+    });
+
+    await request(app)
+      .patch('/api/links/missing/favourite')
+      .send({ favourite: true })
+      .expect(404);
   });
 });
 

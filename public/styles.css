@@ -132,7 +132,8 @@ h3 {
   font-size: 0.78rem;
 }
 
-.button {
+.button,
+.icon-button {
   min-height: 42px;
   border: 0;
   border-radius: 9px;
@@ -140,7 +141,8 @@ h3 {
   cursor: pointer;
 }
 
-.button:disabled {
+.button:disabled,
+.icon-button:disabled {
   cursor: wait;
   opacity: 0.55;
 }
@@ -206,6 +208,15 @@ h3 {
   font-size: 0.875rem;
 }
 
+.filter {
+  display: inline-flex;
+  gap: 7px;
+  align-items: center;
+  color: #3d4b61;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
 .empty-state {
   padding: 44px 20px;
   text-align: center;
@@ -266,6 +277,12 @@ h3 {
   display: flex;
   gap: 8px;
   flex: 0 0 auto;
+}
+
+.icon-button {
+  width: 38px;
+  color: #6d5200;
+  background: #fff8d8;
 }
 
 .visually-hidden {
