@@ -50,7 +50,6 @@ export async function createLinkStore(filePath) {
         url,
         title,
         savedAt: new Date().toISOString(),
-        favourite: false,
       };
 
       links = [link, ...links];

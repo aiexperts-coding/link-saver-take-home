@@ -32,7 +32,7 @@ test('creates, lists, and deletes a persisted link', async () => {
       .expect(201);
 
     assert.equal(created.body.title, 'Example Domain');
-    assert.equal(created.body.favourite, false);
+    assert.equal(Object.hasOwn(created.body, 'favourite'), false);
 
     const listed = await request(app).get('/api/links').expect(200);
     assert.deepEqual(listed.body, [created.body]);

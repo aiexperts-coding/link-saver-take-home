@@ -47,21 +47,12 @@
           </div>
           <div class="list-controls">
             <span id="link-count" class="count">0 saved links</span>
-            <label id="favourites-filter-label" class="filter" hidden>
-              <input id="favourites-filter" type="checkbox">
-              Favourites only
-            </label>
           </div>
         </div>
 
         <div id="empty-state" class="empty-state">
           <h3>No links saved yet</h3>
           <p>Add a complete URL above to start your list.</p>
-        </div>
-
-        <div id="filtered-empty-state" class="empty-state" hidden>
-          <h3>No favourites yet</h3>
-          <p>Mark a saved link as a favourite to see it here.</p>
         </div>
 
         <ul id="link-list" class="link-list" aria-label="Saved links"></ul>
@@ -76,9 +67,6 @@
           <p class="link-date"></p>
         </div>
         <div class="link-actions">
-          <button class="icon-button favourite-button" type="button" hidden>
-            <span aria-hidden="true">☆</span>
-          </button>
           <button class="button button-danger delete-button" type="button">Delete</button>
         </div>
       </li>

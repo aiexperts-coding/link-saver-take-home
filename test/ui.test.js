@@ -35,6 +35,7 @@ test('serves an accessible single-page link saver interface', async () => {
   assert.match(response.text, /aria-live="polite"/);
   assert.match(response.text, /id="link-list"/);
   assert.match(response.text, /rel="noopener noreferrer"/);
+  assert.doesNotMatch(response.text, /favourites-filter|favourite-button/);
 });
 
 test('renders external data through DOM text properties', async () => {

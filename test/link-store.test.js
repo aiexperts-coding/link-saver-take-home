@@ -34,6 +34,8 @@ test('persists links across store reloads', async () => {
       title: 'Example Domain',
     });
 
+    assert.equal(Object.hasOwn(created, 'favourite'), false);
+
     const secondStore = await createLinkStore(filePath);
 
     assert.deepEqual(await secondStore.list(), [created]);
