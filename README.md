@@ -28,6 +28,7 @@ Runtime data is created in `data/links.json`. The file is intentionally ignored 
 - A link is not saved if the URL is invalid, the request fails or times out, the response is not successful HTML, or no usable title is present.
 - Duplicate URLs are allowed because the brief does not define duplicate handling and separate saves may still be meaningful.
 - JSON-file persistence is sufficient for a time-boxed, single-user exercise. Writes are serialized within the process so overlapping mutations do not overwrite one another.
+- A mutation becomes visible in memory only after its JSON write succeeds. Invalid stored records fail startup with a clear error instead of reaching the UI.
 - Dates are stored as ISO strings and formatted in the browser using the user's locale.
 
 ## Favourite feature change
@@ -56,7 +57,7 @@ If the code had to grow, I would separate HTTP handlers from application service
 - Authentication, multiple users, deployment, Docker, pagination, search, and duplicate detection are outside the requested scope.
 - Production-grade SSRF protection is not implemented. An internet-facing version must resolve and block private, loopback, link-local, and cloud metadata destinations on every redirect, with network egress controls as a second layer.
 - The server does not impose a downloaded-body size limit. A production fetcher should stream and cap the response before parsing it.
-- File writes are not a substitute for database transactions across multiple server processes.
+- File writes are not a substitute for database transactions across multiple server processes, and direct JSON replacement is not crash-atomic.
 - The UI uses the browser's current locale for timestamps rather than a user-configurable timezone.
 
 ## AI-assisted workflow

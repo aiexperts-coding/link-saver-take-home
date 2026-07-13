@@ -48,7 +48,7 @@ changed after review and what remains deliberately outside scope.
 
 Why it mattered: it asked the AI to challenge its own output against inputs and invariants instead of merely polishing code.
 
-How I evaluated it: the review exposed two concrete issues. The initial HTML relied on native `type="url"` validation, which prevented the server's clearer invalid-URL response from appearing; adding `novalidate` made the intended error path reachable. It also found hidden favourite controls and a premature `favourite` field in the baseline, which I removed and locked down with regression tests before starting the feature.
+How I evaluated it: the review exposed two concrete issues. The initial HTML relied on native `type="url"` validation, which prevented the server's clearer invalid-URL response from appearing; adding `novalidate` made the intended error path reachable. The initial AI output also ignored part of the first prompt by pre-wiring hidden favourite controls and a `favourite` field. Commit `2e2c564` records my review of that output: I removed the premature code, added regression checks, and only then introduced the feature in `bde614a`.
 
 ## 3. Add favourites as a separate feature
 
