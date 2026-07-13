@@ -6,6 +6,39 @@ function cloneLink(link) {
   return { ...link };
 }
 
+function normalizeStoredLink(link, index) {
+  const hasValidFields = link
+    && typeof link === 'object'
+    && !Array.isArray(link)
+    && typeof link.id === 'string'
+    && link.id.trim() !== ''
+    && typeof link.url === 'string'
+    && typeof link.title === 'string'
+    && link.title.trim() !== ''
+    && typeof link.savedAt === 'string'
+    && !Number.isNaN(Date.parse(link.savedAt))
+    && (link.favourite === undefined || typeof link.favourite === 'boolean');
+
+  let hasSupportedUrl = false;
+
+  if (hasValidFields) {
+    try {
+      hasSupportedUrl = ['http:', 'https:'].includes(new URL(link.url).protocol);
+    } catch {
+      hasSupportedUrl = false;
+    }
+  }
+
+  if (!hasValidFields || !hasSupportedUrl) {
+    throw new SyntaxError(`Stored link ${index + 1} is invalid.`);
+  }
+
+  return {
+    ...link,
+    favourite: link.favourite === true,
+  };
+}
+
 export async function createLinkStore(filePath) {
   await mkdir(path.dirname(filePath), { recursive: true });
 
@@ -19,10 +52,7 @@ export async function createLinkStore(filePath) {
       throw new SyntaxError('The root value must be an array.');
     }
 
-    links = links.map((link) => ({
-      ...link,
-      favourite: link.favourite === true,
-    }));
+    links = links.map(normalizeStoredLink);
   } catch (error) {
     if (error.code === 'ENOENT') {
       links = [];
@@ -34,14 +64,30 @@ export async function createLinkStore(filePath) {
     }
   }
 
-  let writeQueue = Promise.resolve();
+  let mutationQueue = Promise.resolve();
 
-  function persist() {
-    writeQueue = writeQueue
-      .catch(() => undefined)
-      .then(() => writeFile(filePath, `${JSON.stringify(links, null, 2)}\n`, 'utf8'));
+  function enqueueMutation(createMutation) {
+    const operation = mutationQueue.then(async () => {
+      const { nextLinks, result } = createMutation(links);
 
-    return writeQueue;
+      if (nextLinks) {
+        await writeFile(
+          filePath,
+          `${JSON.stringify(nextLinks, null, 2)}\n`,
+          'utf8',
+        );
+        links = nextLinks;
+      }
+
+      return result;
+    });
+
+    mutationQueue = operation.then(
+      () => undefined,
+      () => undefined,
+    );
+
+    return operation;
   }
 
   return {
@@ -50,45 +96,49 @@ export async function createLinkStore(filePath) {
     },
 
     async add({ url, title }) {
-      const link = {
-        id: randomUUID(),
-        url,
-        title,
-        savedAt: new Date().toISOString(),
-        favourite: false,
-      };
+      return enqueueMutation((currentLinks) => {
+        const link = {
+          id: randomUUID(),
+          url,
+          title,
+          savedAt: new Date().toISOString(),
+          favourite: false,
+        };
 
-      links = [link, ...links];
-      await persist();
-
-      return cloneLink(link);
+        return {
+          nextLinks: [link, ...currentLinks],
+          result: cloneLink(link),
+        };
+      });
     },
 
     async setFavourite(id, favourite) {
-      const index = links.findIndex((link) => link.id === id);
+      return enqueueMutation((currentLinks) => {
+        const index = currentLinks.findIndex((link) => link.id === id);
 
-      if (index === -1) {
-        return null;
-      }
+        if (index === -1) {
+          return { nextLinks: null, result: null };
+        }
 
-      const updated = { ...links[index], favourite };
-      links = links.with(index, updated);
-      await persist();
+        const updated = { ...currentLinks[index], favourite };
 
-      return cloneLink(updated);
+        return {
+          nextLinks: currentLinks.with(index, updated),
+          result: cloneLink(updated),
+        };
+      });
     },
 
     async remove(id) {
-      const nextLinks = links.filter((link) => link.id !== id);
+      return enqueueMutation((currentLinks) => {
+        const nextLinks = currentLinks.filter((link) => link.id !== id);
 
-      if (nextLinks.length === links.length) {
-        return false;
-      }
+        if (nextLinks.length === currentLinks.length) {
+          return { nextLinks: null, result: false };
+        }
 
-      links = nextLinks;
-      await persist();
-
-      return true;
+        return { nextLinks, result: true };
+      });
     },
   };
 }

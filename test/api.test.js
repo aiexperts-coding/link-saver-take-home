@@ -135,3 +135,19 @@ test('returns a controlled error for invalid JSON', async () => {
     });
   });
 });
+
+test('returns 413 when the JSON request body exceeds the configured limit', async () => {
+  await withApp(async ({ app }) => {
+    const response = await request(app)
+      .post('/api/links')
+      .send({ url: `https://example.com/${'a'.repeat(11_000)}` })
+      .expect(413);
+
+    assert.deepEqual(response.body, {
+      error: {
+        code: 'PAYLOAD_TOO_LARGE',
+        message: 'Request body must be 10 KB or smaller.',
+      },
+    });
+  });
+});

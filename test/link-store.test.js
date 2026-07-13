@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
@@ -80,6 +80,46 @@ test('rejects malformed JSON instead of silently erasing it', async () => {
     await assert.rejects(
       () => createLinkStore(filePath),
       /Could not parse the link data file/,
+    );
+  });
+});
+
+test('rejects stored records that do not match the link schema', async () => {
+  await withStore(async ({ filePath }) => {
+    await writeFile(filePath, '[{}]\n', 'utf8');
+
+    await assert.rejects(
+      () => createLinkStore(filePath),
+      /Could not parse the link data file: Stored link 1 is invalid/,
+    );
+  });
+});
+
+test('keeps memory unchanged after a failed write and recovers on the next mutation', async () => {
+  await withStore(async ({ filePath }) => {
+    const store = await createLinkStore(filePath);
+
+    await rm(filePath);
+    await mkdir(filePath);
+
+    await assert.rejects(() => store.add({
+      url: 'https://failed.example/',
+      title: 'Failed write',
+    }));
+    assert.deepEqual(await store.list(), []);
+
+    await rm(filePath, { recursive: true });
+    await writeFile(filePath, '[]\n', 'utf8');
+
+    const saved = await store.add({
+      url: 'https://saved.example/',
+      title: 'Saved write',
+    });
+
+    assert.deepEqual(await store.list(), [saved]);
+    assert.deepEqual(
+      await createLinkStore(filePath).then((reloaded) => reloaded.list()),
+      [saved],
     );
   });
 });

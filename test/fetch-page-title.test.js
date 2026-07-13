@@ -51,6 +51,21 @@ test('rejects a non-HTML response', async () => {
   );
 });
 
+test('accepts an XHTML response advertised by the request', async () => {
+  const fetchImpl = async () => new Response(
+    '<html><head><title>XHTML Title</title></head></html>',
+    {
+      status: 200,
+      headers: { 'content-type': 'application/xhtml+xml; charset=utf-8' },
+    },
+  );
+
+  assert.deepEqual(
+    await fetchPageTitle('https://example.com/page.xhtml', { fetchImpl }),
+    { url: 'https://example.com/page.xhtml', title: 'XHTML Title' },
+  );
+});
+
 test('rejects an HTML page without a usable title', async () => {
   const fetchImpl = async () => new Response('<html><body>No title</body></html>', {
     status: 200,

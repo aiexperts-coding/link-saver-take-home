@@ -1,5 +1,7 @@
 import { load } from 'cheerio';
 
+const supportedContentTypes = ['text/html', 'application/xhtml+xml'];
+
 export class TitleFetchError extends Error {
   constructor(code, message, status) {
     super(message);
@@ -67,7 +69,10 @@ export async function fetchPageTitle(
 
     const contentType = response.headers.get('content-type');
 
-    if (contentType && !contentType.toLowerCase().includes('text/html')) {
+    const isSupportedContent = supportedContentTypes.some((type) =>
+      contentType?.toLowerCase().includes(type));
+
+    if (contentType && !isSupportedContent) {
       throw new TitleFetchError(
         'UNSUPPORTED_CONTENT',
         'The URL did not return an HTML page.',

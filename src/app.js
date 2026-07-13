@@ -73,6 +73,15 @@ export function createApp({ store, fetchTitle, publicDirectory } = {}) {
   }
 
   app.use((error, _request, response, _next) => {
+    if (error?.type === 'entity.too.large') {
+      return response.status(413).json({
+        error: {
+          code: 'PAYLOAD_TOO_LARGE',
+          message: 'Request body must be 10 KB or smaller.',
+        },
+      });
+    }
+
     if (error?.type === 'entity.parse.failed') {
       return response.status(400).json({
         error: {
